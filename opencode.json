@@ -14,13 +14,26 @@
       "node_modules/**",
       "dist/**",
       "build/**",
-      ".next/**"
+      ".next/**",
+      "__pycache__/**",
+      "**/__pycache__/**",
+      ".venv/**",
+      "venv/**",
+      ".pytest_cache/**",
+      "coverage/**",
+      "tmp/**",
+      "temp/**",
+      "logs/**"
     ]
   },
   "permission": {
     "skill": "allow",
     "webfetch": "allow",
     "websearch": "allow",
-    "task": "allow"
+    "task": "ask"
+  },
+  "tool_output": {
+    "max_lines": 1200,
+    "max_bytes": 32768
   }
 }
