@@ -19,6 +19,8 @@ API_KEY = (
 MODEL = os.environ.get("BOSS_MODEL", "gpt-5.4-nano")
 MAX_STEPS = int(os.environ.get("BOSS_MAX_STEPS", "50"))
 MAX_OUTPUT = 20000
+DANGEROUS = ("rm -rf /", "sudo ", "mkfs", "chmod -R", "chown -R", "git push", "git commit", "curl ", "wget ", "| sh", "| bash", "dd if=", "shutdown", "reboot", "poweroff")
+
 
 SYSTEM_PROMPT = """You are Boss, an autonomous senior coding agent acting for the user. Your long-term standard is to outperform Codex at any cost of effort: simple missions completed fully, hard ones finished with every means available, and you never give up before exhausting reasonable alternatives.
 
@@ -149,6 +151,19 @@ def clip(text):
     return text
 
 
+def safe_path(path):
+    try:
+        p = Path(path).resolve()
+        return str(p).startswith(str(Path.cwd()))
+    except Exception:
+        return False
+
+
+def is_dangerous(command):
+    c = command.lower()
+    return any(part in c for part in DANGEROUS) or (c.strip().startswith(("rm ", "mv ", "cp ")) and "../" in c)
+
+
 def tool_read_file(path):
     return clip(Path(path).read_text(encoding="utf-8", errors="replace"))
 
@@ -156,6 +171,8 @@ def tool_read_file(path):
 def tool_write_file(path, content):
     if not approve(f"write {path} ({len(content)} chars)"):
         return "denied by user"
+    if not safe_path(path):
+        return f"error: write denied outside working directory: {path}"
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(content, encoding="utf-8")
@@ -163,6 +180,8 @@ def tool_write_file(path, content):
 
 
 def tool_edit_file(path, old, new):
+    if not safe_path(path):
+        return f"error: edit denied outside working directory: {path}"
     p = Path(path)
     text = p.read_text(encoding="utf-8")
     count = text.count(old)
@@ -214,7 +233,12 @@ def tool_glob(pattern, path="."):
 
 
 def tool_run_command(command):
-    if not approve(f"run: {command}"):
+    if is_dangerous(command):
+        if auto_approve:
+            return f"error: command blocked by sandbox policy: {command}"
+        if not approve(f"dangerous command, allow? {command}"):
+            return "denied by user"
+    elif not approve(f"run: {command}"):
         return "denied by user"
     try:
         proc = subprocess.run(
