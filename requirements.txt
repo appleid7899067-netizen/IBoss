@@ -1,0 +1,2 @@
+# Boss only uses the Python standard library.
+# Put third-party dependencies here if added later.
