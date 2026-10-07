@@ -1,19 +1,27 @@
 ---
-description: GitHub operations - read/write files, create repos, push commits
-agent: build
+description: GitHub operations - read, write, list, commit, branch, and push
+agent: operator
 ---
 
-GitHub operations for $ARGUMENTS
+GitHub operations for $ARGUMENTS.
 
-Use the GitHub API with the token from environment variable `GITHUB_TOKEN` or `BOSS_GITHUB_TOKEN`.
+Repository: `appleid7899067-netizen/IBoss` by default. Use `BOSS_GITHUB_REPO` to override.
+
+Authentication:
+- Use `GITHUB_TOKEN` or `BOSS_GITHUB_TOKEN` from the environment.
+- Never print, expose, commit, or write the token into files.
+- If no token is available, report that clearly.
 
 Operations:
-- `read <path>` - Read a file from the repo
-- `write <path> <content>` - Write/update a file
-- `list` - List files in repo root
-- `create-repo <name>` - Create a new repository
-- `push` - Push local commits to remote
+- `read <path>` — read a repository file
+- `write <path> <content>` — create or update a repository file
+- `list` — list repository files
+- `branch <name>` — create or switch to a branch when supported
+- `commit <message>` — create a local commit
+- `push` — push commits to the configured remote
 
-Repo: `appleid7899067-netizen/IBoss` (or set `BOSS_GITHUB_REPO`)
-
-If no token is available, tell the user to set `GITHUB_TOKEN` or `BOSS_GITHUB_TOKEN`.
+Workflow:
+1. Inspect the current repository state before changing anything.
+2. Make the smallest correct change.
+3. Verify the result with git diff/status and relevant tests.
+4. Never force-push unless the user explicitly asks.
