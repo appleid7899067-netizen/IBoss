@@ -4,4 +4,6 @@ RUN npm install -g opencode-ai@latest
 WORKDIR /app
 COPY . .
 EXPOSE 4096
+ENV BUN_OPTIONS="--smol"
+ENV BUN_CONFIG_MAX_HTTP_REQUESTS="32"
 CMD ["sh", "-c", "opencode web --hostname 0.0.0.0 --port ${PORT:-4096}"]
