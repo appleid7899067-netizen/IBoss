@@ -10,5 +10,5 @@ services:
         value: "4096"
       - key: NODE_ENV
         value: production
-    healthCheckPath: /
+    healthCheckPath: /global/health
     autoDeploy: true
