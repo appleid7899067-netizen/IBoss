@@ -118,6 +118,35 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "github_read",
+            "description": "Read a file from the configured GitHub repository. Args: path, ref (branch, default main).",
+            "parameters": {
+                "type": "object",
+                "properties": {"path": {"type": "string"}, "ref": {"type": "string"}},
+                "required": ["path"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "github_write",
+            "description": "Create or update a file in the configured GitHub repository. Args: path, content, commit_message, ref (default main).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string"},
+                    "content": {"type": "string"},
+                    "commit_message": {"type": "string"},
+                    "ref": {"type": "string"},
+                },
+                "required": ["path", "content", "commit_message"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "run_command",
             "description": "Run a shell command in the working directory.",
             "parameters": {
@@ -232,6 +261,71 @@ def tool_glob(pattern, path="."):
     return "\n".join(sorted(results)) or "no matches"
 
 
+GITHUB_REPO = os.environ.get("BOSS_GITHUB_REPO", "appleid7899067-netizen/IBoss")
+GITHUB_TOKEN = os.environ.get("BOSS_GITHUB_TOKEN") or os.environ.get("GITHUB_TOKEN") or ""
+
+
+def github_headers():
+    return {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+
+
+def tool_github_read(path, ref="main"):
+    if not GITHUB_TOKEN:
+        return "error: set BOSS_GITHUB_TOKEN or GITHUB_TOKEN"
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{path}?ref={ref}"
+    req = urllib.request.Request(url, headers=github_headers())
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data = json.loads(resp.read())
+        import base64
+        return base64.b64decode(data.get("content", "")).decode("utf-8", "replace")
+    except urllib.error.HTTPError as exc:
+        return f"error: GitHub read failed {exc.code}: {exc.read().decode('utf-8', 'replace')[:300]}"
+    except Exception as exc:
+        return f"error: {exc}"
+
+
+def tool_github_write(path, content, commit_message, ref="main"):
+    if not GITHUB_TOKEN:
+        return "error: set BOSS_GITHUB_TOKEN or GITHUB_TOKEN"
+    import base64
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{path}"
+    headers = github_headers()
+    sha = None
+    try:
+        req = urllib.request.Request(f"{url}?ref={ref}", headers=headers)
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            sha = json.loads(resp.read()).get("sha")
+    except urllib.error.HTTPError as exc:
+        if exc.code != 404:
+            return f"error: GitHub lookup failed {exc.code}: {exc.read().decode('utf-8', 'replace')[:300]}"
+    payload = {
+        "message": commit_message,
+        "content": base64.b64encode(content.encode("utf-8")).decode("ascii"),
+        "branch": ref,
+    }
+    if sha:
+        payload["sha"] = sha
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers=headers,
+        method="PUT",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data = json.loads(resp.read())
+        return f"committed to {GITHUB_REPO}/{path} as {data['content']['sha'][:7]}"
+    except urllib.error.HTTPError as exc:
+        return f"error: GitHub write failed {exc.code}: {exc.read().decode('utf-8', 'replace')[:300]}"
+    except Exception as exc:
+        return f"error: {exc}"
+
+
 def tool_run_command(command):
     if is_dangerous(command):
         if auto_approve:
@@ -250,6 +344,8 @@ def tool_run_command(command):
 
 
 HANDLERS = {
+    "github_read": tool_github_read,
+    "github_write": tool_github_write,
     "glob": tool_glob,
     "read_file": tool_read_file,
     "write_file": tool_write_file,
