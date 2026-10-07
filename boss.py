@@ -485,9 +485,30 @@ def serve():
                 self.send_response(200); self.send_header("Content-Type","text/plain"); self.end_headers(); self.wfile.write(b"ok"); return
             body = ("""<!DOCTYPE html>
 <html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Boss Agent</title>
-<style>body{font-family:system-ui,sans-serif;max-width:760px;margin:2rem auto;background:#0b0d12;color:#e6edf3}textarea{width:100%;height:160px;background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:8px;padding:12px}button{margin-top:10px;padding:10px 18px;border:0;border-radius:8px;background:#238636;color:white;cursor:pointer}pre{white-space:pre-wrap;background:#161b22;padding:12px;border-radius:8px;min-height:80px}</style></head>
-<body><h1>Boss Agent</h1><p>model: """ + MODEL + """</p><textarea id="p" placeholder="สั่ง Boss ได้เลย เช่น สร้างเว็บขายบ้าน"></textarea><button onclick="run()">รัน</button><pre id="out">ผลลัพธ์จะอยู่ตรงนี้</pre>
-<script>async function run(){const p=document.getElementById('p').value;document.getElementById('out').textContent='กำลังทำงาน...';const r=await fetch('/task',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:p})});document.getElementById('out').textContent=await r.text();}</script></body></html>""").encode()
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#e0e0e0;display:flex;justify-content:center;align-items:flex-start;padding:2rem}
+.card{width:100%;max-width:800px;background:rgba(255,255,255,.06);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:2rem;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+h1{font-size:1.8rem;background:linear-gradient(90deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.25rem}
+.sub{color:#888;font-size:.85rem;margin-bottom:1.5rem}
+textarea{width:100%;height:140px;background:rgba(0,0,0,.3);color:#e0e0e0;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:14px;font-size:1rem;resize:vertical;font-family:inherit}
+textarea:focus{outline:none;border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.2)}
+button{margin-top:12px;padding:12px 28px;border:none;border-radius:10px;background:linear-gradient(90deg,#667eea,#764ba2);color:#fff;font-size:1rem;font-weight:600;cursor:pointer;transition:transform .15s,box-shadow .15s}
+button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(102,126,234,.4)}
+button:active{transform:translateY(0)}
+pre{white-space:pre-wrap;background:rgba(0,0,0,.35);padding:16px;border-radius:10px;min-height:100px;font-size:.9rem;line-height:1.6;border:1px solid rgba(255,255,255,.08)}
+.status{display:inline-block;width:8px;height:8px;border-radius:50%;background:#4caf50;margin-right:6px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style></head>
+<body><div class="card">
+<h1>Boss Agent</h1>
+<p class="sub"><span class="status"></span>model: """ + MODEL + """</p>
+<textarea id="p" placeholder="สั่ง Boss ได้เลย เช่น สร้างเว็บขายบ้าน..."></textarea>
+<br><button onclick="run()">รัน</button>
+<pre id="out">ผลลัพธ์จะอยู่ตรงนี้</pre>
+</div>
+<script>async function run(){const p=document.getElementById('p').value;const out=document.getElementById('out');out.textContent='กำลังทำงาน...';try{const r=await fetch('/task',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:p})});out.textContent=await r.text();}catch(e){out.textContent='Error: '+e.message;}}</script>
+</body></html>""").encode()
             self.send_response(200); self.send_header("Content-Type","text/html; charset=utf-8"); self.end_headers(); self.wfile.write(body)
 
         def do_POST(self):
