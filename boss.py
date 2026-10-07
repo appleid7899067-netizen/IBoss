@@ -6,6 +6,7 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 PUTER_URL = os.environ.get("PUTER_API_URL", "https://api.puter.com").rstrip("/")
@@ -349,12 +350,52 @@ def run_turn(messages, user_text):
     print("\n[Boss] reached step limit")
 
 
+def serve():
+    import io
+    import contextlib
+    import signal
+
+    global auto_approve
+    auto_approve = True
+    port = int(os.environ.get("PORT", "8000"))
+
+    class H(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == "/health":
+                self.send_response(200); self.send_header("Content-Type","text/plain"); self.end_headers(); self.wfile.write(b"ok"); return
+            body = f"Boss OK. POST /task with JSON {{\"prompt\": \"...\"}}. model={MODEL}".encode()
+            self.send_response(200); self.send_header("Content-Type","text/plain"); self.end_headers(); self.wfile.write(body)
+
+        def do_POST(self):
+            if self.path != "/task":
+                self.send_response(404); self.end_headers(); return
+            try:
+                data = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+                prompt = data["prompt"]
+            except Exception:
+                self.send_response(400); self.send_header("Content-Type","text/plain"); self.end_headers(); self.wfile.write(b"bad request: need JSON {\"prompt\": \"...\"}"); return
+            messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+            buf = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(buf):
+                    run_turn(messages, prompt)
+                out = buf.getvalue()
+                self.send_response(200); self.send_header("Content-Type","text/plain; charset=utf-8"); self.end_headers(); self.wfile.write(out.encode("utf-8"))
+            except SystemExit as exc:
+                self.send_response(500); self.send_header("Content-Type","text/plain; charset=utf-8"); self.end_headers(); self.wfile.write(str(exc).encode("utf-8"))
+        def log_message(self, *a): print(self.address_string(), self.command, self.path)
+
+    server = ThreadingHTTPServer(("0.0.0.0", port), H)
+    print(f"Boss HTTP on 0.0.0.0:{port}")
+    server.serve_forever()
+
+
 def main():
     global MODEL, BASE_URL, API_KEY, auto_approve
     import argparse
 
     parser = argparse.ArgumentParser(prog="boss", description="Boss coding agent")
-    parser.add_argument("command", nargs="?", choices=["exec", "run", "repl"], default="repl")
+    parser.add_argument("command", nargs="?", choices=["exec", "run", "repl", "serve"], default="repl")
     parser.add_argument("prompt", nargs="*", help="task for exec/run")
     parser.add_argument("--model", default=MODEL)
     parser.add_argument("--base-url", default=BASE_URL, help="OpenAI-compatible URL; empty uses Puter")
@@ -378,6 +419,9 @@ def main():
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     task = " ".join(args.prompt).strip()
+    if args.command == "serve":
+        serve()
+        return
     if args.command in ("exec", "run") or task and args.command == "repl":
         if not task:
             raise SystemExit("Give a task: boss exec <task>")
