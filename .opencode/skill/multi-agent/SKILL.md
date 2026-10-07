@@ -5,7 +5,9 @@ description: Coordinate specialized OpenCode agents for complex work by delegati
 
 # Multi-Agent
 
-Use the `task` tool to delegate work to specialized subagents.
+This deployment is memory-constrained. Do not spawn subagents here; the project denies the `task` tool to avoid additional server memory use.
+
+Only use the `task` tool when project permissions allow it and the runtime has enough memory for additional agents. In this deployment, keep all work in the primary agent.
 
 ## Roles
 - Researcher: inspect documentation, APIs, and project context.
@@ -14,7 +16,7 @@ Use the `task` tool to delegate work to specialized subagents.
 - Tester: run focused tests and diagnose failures.
 
 ## Workflow
-1. Split complex work into independent or sequential pieces.
+1. If subagents are unavailable or denied, complete the work in the primary agent. Otherwise, split complex work into independent or sequential pieces.
 2. Delegate research or exploration when useful.
 3. Give implementation agents precise acceptance criteria.
 4. Ask a reviewer to inspect resulting changes.

@@ -6,7 +6,9 @@
   "compaction": {
     "auto": true,
     "prune": true,
-    "reserved": 8000
+    "reserved": 8000,
+    "tail_turns": 2,
+    "preserve_recent_tokens": 4000
   },
   "watcher": {
     "ignore": [
@@ -30,10 +32,10 @@
     "skill": "allow",
     "webfetch": "allow",
     "websearch": "allow",
-    "task": "ask"
+    "task": "deny"
   },
   "tool_output": {
-    "max_lines": 1200,
-    "max_bytes": 32768
+    "max_lines": 300,
+    "max_bytes": 8192
   }
 }
