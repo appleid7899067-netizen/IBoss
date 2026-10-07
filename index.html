@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boss House</title>
+<style>
+  body { margin: 0; min-height: 100vh; background: linear-gradient(#87ceeb 70%, #7ec850 70%); display: flex; align-items: flex-end; justify-content: center; }
+  .scene { position: relative; width: 320px; height: 300px; margin-bottom: 12vh; }
+  .roof { position: absolute; left: 0; top: 0; width: 0; height: 0; border-left: 160px solid transparent; border-right: 160px solid transparent; border-bottom: 120px solid #b03a2e; }
+  .body { position: absolute; left: 30px; top: 120px; width: 260px; height: 180px; background: #f5deb3; border: 3px solid #8b6b3d; box-sizing: border-box; }
+  .door { position: absolute; left: 105px; bottom: 0; width: 50px; height: 90px; background: #6b4226; }
+  .door::after { content: ""; position: absolute; right: 8px; top: 45px; width: 6px; height: 6px; border-radius: 50%; background: gold; }
+  .window { position: absolute; top: 40px; width: 55px; height: 55px; background: #aee3f5; border: 4px solid #8b6b3d; box-sizing: border-box; }
+  .w1 { left: 25px; } .w2 { right: 25px; }
+  .sun { position: fixed; top: 30px; right: 40px; width: 70px; height: 70px; border-radius: 50%; background: #ffd400; }
+</style>
+</head>
+<body>
+  <div class="sun"></div>
+  <div class="scene">
+    <div class="roof"></div>
+    <div class="body">
+      <div class="window w1"></div>
+      <div class="window w2"></div>
+      <div class="door"></div>
+    </div>
+  </div>
+</body>
+</html>
