@@ -4,4 +4,4 @@ RUN npm install -g opencode-ai@latest
 WORKDIR /app
 COPY .opencode .opencode
 EXPOSE 4096
-CMD ["opencode", "web", "--host", "0.0.0.0", "--port", "4096"]
+CMD ["opencode", "web", "--hostname", "0.0.0.0", "--port", "4096"]
