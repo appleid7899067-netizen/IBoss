@@ -363,8 +363,12 @@ def serve():
         def do_GET(self):
             if self.path == "/health":
                 self.send_response(200); self.send_header("Content-Type","text/plain"); self.end_headers(); self.wfile.write(b"ok"); return
-            body = f"Boss OK. POST /task with JSON {{\"prompt\": \"...\"}}. model={MODEL}".encode()
-            self.send_response(200); self.send_header("Content-Type","text/plain"); self.end_headers(); self.wfile.write(body)
+            body = ("""<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Boss Agent</title>
+<style>body{font-family:system-ui,sans-serif;max-width:760px;margin:2rem auto;background:#0b0d12;color:#e6edf3}textarea{width:100%;height:160px;background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:8px;padding:12px}button{margin-top:10px;padding:10px 18px;border:0;border-radius:8px;background:#238636;color:white;cursor:pointer}pre{white-space:pre-wrap;background:#161b22;padding:12px;border-radius:8px;min-height:80px}</style></head>
+<body><h1>Boss Agent</h1><p>model: """ + MODEL + """</p><textarea id="p" placeholder="สั่ง Boss ได้เลย เช่น สร้างเว็บขายบ้าน"></textarea><button onclick="run()">รัน</button><pre id="out">ผลลัพธ์จะอยู่ตรงนี้</pre>
+<script>async function run(){const p=document.getElementById('p').value;document.getElementById('out').textContent='กำลังทำงาน...';const r=await fetch('/task',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:p})});document.getElementById('out').textContent=await r.text();}</script></body></html>""").encode()
+            self.send_response(200); self.send_header("Content-Type","text/html; charset=utf-8"); self.end_headers(); self.wfile.write(body)
 
         def do_POST(self):
             if self.path != "/task":
