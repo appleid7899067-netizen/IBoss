@@ -1,6 +1,22 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "operator",
+  "snapshot": false,
+  "autoupdate": false,
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 8000
+  },
+  "watcher": {
+    "ignore": [
+      ".git/**",
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      ".next/**"
+    ]
+  },
   "permission": {
     "skill": "allow",
     "webfetch": "allow",
