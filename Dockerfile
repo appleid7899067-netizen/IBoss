@@ -1,9 +1,6 @@
-FROM node:20-alpine
-RUN apk add --no-cache git bash curl
-RUN npm install -g opencode-ai@latest
+FROM python:3.12-slim
 WORKDIR /app
 COPY . .
-EXPOSE 4096
-ENV BUN_OPTIONS="--smol"
-ENV BUN_CONFIG_MAX_HTTP_REQUESTS="32"
-CMD ["sh", "-c", "opencode web --hostname 0.0.0.0 --port ${PORT:-4096}"]
+EXPOSE 8000
+ENV PORT=8000
+CMD ["python", "boss.py", "serve"]
